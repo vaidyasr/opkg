@@ -1,0 +1,5 @@
+RewriteEngine on
+RewriteRule ^$ /index.php?section=a110
+RewriteRule ^/(c200|a110|vten|a400)/ /index.php?section=$1
+RewriteRule ^/(c200|a110|vten|a400) /index.php?section=$1
+RewriteRule ^/index.php(.*) /index.php$1

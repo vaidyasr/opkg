@@ -1,0 +1,612 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+<?php
+    $section = "a110";
+    //print_r($_SERVER);
+    $req = explode("/", $_SERVER['REQUEST_URI']);
+    if ($req[count($req)-1] == '' )
+        array_pop($req);
+print_r($req);
+
+    if(isset($req[1]))
+        $series = $req[1];
+    if(isset($req[2]))
+        $section = $req[2];
+    if(isset($req[3]))
+        $subsection = $req[3];
+
+    if(isset($_GET['package']))
+        //$package = $_GET['package'];
+        $package = $req[count($req)-1];
+    if ($package == "filelist")
+        $task = "filelist";
+    else if ($package == "allpackages")
+        $task = "allpackages";
+
+    if(isset($_GET['section'])) {
+        $input = explode("/", $_GET['section']);
+print_r($input);
+    if ($input[1] == '')
+        $section = $input[0];
+    else if ($input[2] == ''){
+        $section = $input[0];
+        $subsection = $input[1];
+    }
+    else if ($input[3] == ''){
+        $section = $input[0];
+        if ($section == "source") {
+            $source = "yes";
+            $section = $input[1];
+            $subsection = $input[2];
+            $package = $req[count($req)-1];
+        }
+        else {
+            $subsection = $input[1];
+            $package = $req[count($req)-2];
+        }
+    }
+    if ($section == "a110")
+        $text = "100";
+    else if ($section == "c200")
+        $text = "200/300";
+    else if ($section == "a400")
+        $text = "400";
+    }
+    if(isset($_GET['searchon'])) {
+        $searchon = $_GET['searchon'];
+        if(isset($_GET['keywords']))
+            $keywords = $_GET['keywords'];
+        else
+            $keywords = '';
+    }
+?>
+<title>Networked Media Tank -- 
+<?php
+if (!isset($subsection) && $package == '' && !isset($searchon))
+    print('List of sections in "'.$text.' Series"');
+else if (isset($subsection) && $package == '' && !isset($searchon))
+    print('Software Packages in "'.$text.' Series", Subsection '.$subsection);
+else if (isset($task) && $task == 'allpackages')
+    print('Software Packages in "'.$text.' Series"');
+else if (isset($source))
+    print('Details of source package in '.$package.' in "'.$text.' Series"');
+else if (isset($searchon)) {
+    if ($keywords == '')
+        print('Error');
+    else
+        print('Package Search Results -- '.$keywords);
+}
+else
+    print('Details of package '.$package.' in "'.$text.' Series"');
+?>
+</title>
+<link rev="made" href="mailto:webmaster@debian.org">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Author" content="Debian Webmaster, webmaster@debian.org">
+<meta name="Description" content="">
+<meta name="Keywords" content="Debian,  wheezy">
+
+
+<link href="/debpkg.css" rel="stylesheet" type="text/css" media="all">
+
+<script src="/packages.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="header">
+   <div id="upperheader">
+
+   <div id="logo">
+  <!-- very Debian specific use of the logo stuff -->
+</div> <!-- end logo -->
+</div> <!-- end upperheader -->
+
+<div id="pnavbar">
+ &nbsp;&#x2F; Packages
+
+<?php
+if (!isset($searchon))
+    print('&#x2F; <a href="/<?php echo $section;?>/" ><?php echo $text;?> Series</a> ');
+
+if (!isset($subsection) && $package == '' && !isset($searchon))
+    print('&#x2F; Index ');
+else if (isset($subsection) && $package == '' && !isset($searchon))
+    print('&#x2F; '.$subsection.' ');
+else if (isset($searchon) && $searchon != 'contents')
+    print('&#x2F; package search results ');
+else if (isset($searchon) && $searchon == 'contents')
+    print('&#x2F; package contents search results ');
+else
+    print('&#x2F; <a href="/'.$section.'/'.$subsection.'/" >'.$subsection.'</a> &#x2F; '.$package.' ');
+?>
+
+</div> <!-- end navbar -->
+
+</div> <!-- end header -->
+<div id="content">
+<?php
+if (!isset($subsection) && $package == '' && !isset($searchon)) {
+if($section == "a110") 
+    print('<div id="pothers">       [&nbsp;    <strong>100 Series</strong>  &nbsp;] [&nbsp;    <a  href="/c200/">200/300 Series</a>  &nbsp;] [&nbsp;    <a  href="/a400/">400 Series</a>  &nbsp;]</div>'."\n");
+else if ($section == "c200")
+    print('<div id="pothers">       [&nbsp;    <a href="/a110/">100 Series</a>  &nbsp;] [&nbsp;    <strong>200/300 Series</strong>  &nbsp;] [&nbsp;    <a  href="/a400/">400 Series</a>  &nbsp;]</div>'."\n");
+else if ($section == "a400")
+    print('<div id="pothers">       [&nbsp;    <a href="/a110/">100 Series</a>  &nbsp;] [&nbsp;    <a  href="/c200/">200/300 Series</a>  &nbsp;] [&nbsp;    <strong>400 Series</strong>  &nbsp;]</div>'."\n");
+}
+
+    if (isset($searchon))
+        $sec = array("a110", "c200", "a400");
+    else
+        $sec = array($section);
+    foreach ($sec as $sect) {
+    $sections = file_get_contents($sect."/Packages");
+    $sections .= file_get_contents($sect."-dev/Packages");
+    $result = preg_match_all("|Section: (.*)|", $sections, $output);
+    if (!isset($searchon))
+        $uniq_array = array_unique($output[1]);
+    $array = explode("\n\n\n", $sections);
+    foreach ($array as $pkgdata) {
+        $data_lines = explode("\n", $pkgdata);
+        foreach ($data_lines as $data) {
+            if ($data != "") {
+                if ($data[0] != " " ){
+                    $tmpdata = explode(": ", $data);
+                    if ($tmpdata[0] == "Package")
+                        $pkg = $tmpdata[1];
+                    $opkg_data[$pkg][$sect][$tmpdata[0]] = trim($tmpdata[1]);
+                }
+                else {
+                    $opkg_data[$pkg][$sect]['LongDescription'] .= trim($data);
+                }
+            }
+        }
+        $search = array(".tar",".gz",".bz",".xz",".zip", ".src");
+        $spackage = str_replace($search, "", basename($opkg_data[$pkg][$sect]['Source']));
+        $opkg_data[$pkg][$sect]['sourcepackage'] = $spackage;
+    }
+    }
+    ksort($opkg_data);
+
+if (!isset($subsection) && $package == '' && !isset($searchon))
+    print('<h1>List of sections in "'.$text.' Series"</h1> <div id="lefthalfcol"><dl>'."\n");
+else if (isset($subsection) && $package == '' && !isset($searchon))
+    print('<div id="content"> <h1>Software Packages in "'.$text.'", Subsection '.$subsection.'</h1><!-- messages.tmpl --> <dl>'."\n");
+else if (isset($task) && $task == 'allpackages')
+    print('<div id="content"> <h1>Software Packages in "'.$text.'"</h1><!-- messages.tmpl --> <dl>'."\n");
+else if (isset($searchon))
+    if ($keywords == '')
+        print('<h1>Error</h1><!-- messages.tmpl --><div class="perror"> <p>keyword not valid or missing</p> </div></div> <!-- end inner -->');
+  
+
+if (!isset($subsection) && $package == '' && !isset($searchon)) {
+  if(in_array("admin", $uniq_array))
+    print('<dt><a href="admin/">Administration Utilities</a></dt><dd>Utilities to administer system resources, manage user accounts, etc.</dd>'."\n");
+
+  if(in_array("database", $uniq_array))
+    print('<dt><a href="database/">Databases</a></dt><dd>Database Servers and Clients.</dd>'."\n");
+
+  if(in_array('devel', $uniq_array))
+    print('<dt><a href="devel/">Development</a></dt><dd>Development utilities, compilers, development environments, libraries, etc.</dd>'."\n");
+
+  if(in_array('doc', $uniq_array))
+    print('<dt><a href="doc/">Documentation</a></dt><dd>FAQs, HOWTOs and other documents trying to explain everything related to Debian, and software needed to browse documentation (man, info, etc).</dd>'."\n");
+
+  if (in_array('editors', $uniq_array))
+    print('<dt><a href="editors/">Editors</a></dt><dd>Software to edit files. Programming environments.</dd>'."\n");
+  
+  if (in_array('games', $uniq_array))
+  print('<dt><a href="games/">Games</a></dt> <dd>Programs to spend a nice time with after all this setting up.</dd>'."\n");
+  
+  if (in_array('graphics', $uniq_array))
+  print('<dt><a href="graphics/">Graphics</a></dt><dd>Editors, viewers, converters... Everything to become an artist.</dd>'."\n");
+  
+  if (in_array('httpd', $uniq_array))
+  print('<dt><a href="httpd/">Web Servers</a></dt><dd>Web servers and their modules.</dd>'."\n");
+  
+  if (in_array('interpreters', $uniq_array))
+  print('<dt><a href="interpreters/">Interpreters</a></dt><dd>All kind of interpreters for interpreted languages. Macro processors.</dd>'."\n");
+  
+  if (in_array('java', $uniq_array))
+  print('<dt><a href="java/">Java</a></dt><dd>Everything about Java.</dd>'."\n");
+  
+  if (in_array('kernel', $uniq_array))
+  print('<dt><a href="kernel/">Kernels</a></dt> <dd>Operating System Kernels and related modules.</dd>'."\n");
+  
+  if (in_array('libdevel', $uniq_array))
+  print('<dt><a href="libdevel/">Library development</a></dt> <dd>Libraries necessary for developers to write programs that use them.</dd>'."\n");
+  
+  if (in_array('libs', $uniq_array))
+  print('<dt><a href="libs/">Libraries</a></dt> <dd>Libraries to make other programs work. They provide special features to developers.</dd>'."\n");
+
+  if (in_array('misc', $uniq_array))
+  print('<dt><a href="misc/">Miscellaneous</a></dt> <dd>Miscellaneous utilities that didn\'t fit well anywhere else.</dd>'."\n");
+
+  if (in_array('net', $uniq_array))
+  print('<dt><a href="net/">Network</a></dt><dd>Daemons and clients to connect your system to the world.</dd>'."\n");
+  
+  print('</dl> </div> <!-- end lefthalfcol --> <div id="righthalfcol"> <dl>  '."\n");
+
+  if (in_array('ocaml', $uniq_array))
+  print('<dt><a href="ocaml/">OCaml</a></dt><dd>Everything about OCaml, an ML language implementation.</dd>'."\n");
+  
+  if (in_array('perl', $uniq_array))
+  print('<dt><a href="perl/">Perl</a></dt><dd>Everything about Perl, an interpreted scripting language.</dd>'."\n");
+  
+  if (in_array('php', $uniq_array))
+  print('<dt><a href="php/">PHP</a></dt><dd>Everything about PHP.</dd>'."\n");
+  
+  if (in_array('python', $uniq_array))
+  print('<dt><a href="python/">Python</a></dt> <dd>Everything about Python, an interpreted, interactive object oriented language.</dd>'."\n");
+  
+  if (in_array('ruby', $uniq_array))
+  print('<dt><a href="ruby/">Ruby</a></dt> <dd>Everything about Ruby, an interpreted object oriented language.</dd>'."\n");
+  
+  if (in_array('shells', $uniq_array))
+  print('<dt><a href="shells/">Shells</a></dt> <dd>Command shells. Friendly user interfaces for beginners.</dd>'."\n");
+
+  if (in_array('sound', $uniq_array))
+  print('<dt><a href="sound/">Sound</a></dt> <dd>Utilities to deal with sound: mixers, players, recorders, CD players, etc.</dd>'."\n");
+
+  if (in_array('text', $uniq_array))
+  print('<dt><a href="text/">Text Processing</a></dt> <dd>Utilities to format and print text documents.</dd>'."\n");
+
+  if (in_array('utils', $uniq_array))
+  print('<dt><a href="utils/">Utilities</a></dt> <dd>Utilities for file/disk manipulation, backup and archive tools, system monitoring, input systems, etc.</dd>'."\n");
+
+  if (in_array('vcs', $uniq_array))
+  print('<dt><a href="vcs/">Version Control Systems</a></dt> <dd>Version control systems and related utilities.</dd>'."\n");
+
+  if (in_array('video', $uniq_array))
+  print('<dt><a href="video/">Video</a></dt> <dd>Video viewers, editors, recording, streaming.</dd>'."\n");
+
+  if (in_array('web', $uniq_array))
+  print('<dt><a href="web/">Web Software</a></dt> <dd>Web servers, browsers, proxies, download tools etc.</dd>'."\n");
+  
+  if (in_array('x11', $uniq_array))
+  print('<dt><a href="x11/">X Window System software</a></dt> <dd>X servers, libraries, fonts, window managers, terminal emulators and many related applications.</dd>'."\n");
+  
+  print('</dl></div> <p class="psmallcenter"> <a href="allpackages" title="List of all packages">All packages</a> </p> </div> <!-- end inner -->'."\n");
+}
+else if (isset($subsection) && $package == '' && !isset($searchon)) {
+foreach($opkg_data as $arch=>$pch){
+    foreach($pch as $key => $value) {
+        if ($value['Section'] == $subsection)
+        print("<dt><a href='".$value['Package']."' id='".$value['Package']."'>".$value['Package']."</a> (".$value['Version'].")</dt><dd>".$value['Description']."</dd>\n");
+    }
+}
+}
+else if (!isset($task)){
+print('<form method="GET" action="/index.php"> <div id="hpacketsearch"> <input type="submit" value="Search">');
+print('<select size="1" name="searchon">');
+print('<option value="names" ');
+if ($searchon == "names")
+    print('selected="selected"');
+print('>package names</option>');
+print('<option value="all" ');
+if ($searchon == "all")
+    print('selected="selected"');
+print('>descriptions</option>');
+print('<option value="sourcenames" ');
+if ($searchon == "sourcenames")
+    print('selected="selected"');
+print('>source package names</option>');
+print('<option value="contents" ');
+if ($searchon == "contents")
+    print('selected="selected"');
+print('>package contents</option> </select>');
+print('<input type="text" size="30" name="keywords" value="'.$keywords.'" id="kw">');
+print('</div> <!-- end hpacketsearch --> </form>');
+
+if (!isset($source) && !isset($searchon)){
+if($section == "a110") 
+    print('<div id="pothers">       [&nbsp;    <strong>100 Series</strong>  &nbsp;] [&nbsp;    <a  href="/c200/'.$subsection.'/'.$package.'">200/300 Series</a>  &nbsp;] [&nbsp;    <a  href="/a400/'.$subsection.'/'.$package.'">400 Series</a>  &nbsp;]</div>'."\n");
+else if ($section == "c200")
+    print('<div id="pothers">       [&nbsp;    <a href="/a110/'.$subsection.'/'.$package.'">100 Series</a>  &nbsp;] [&nbsp;    <strong>200/300 Series</strong>  &nbsp;] [&nbsp;    <a  href="/a400/'.$subsection.'/'.$package.'">400 Series</a>  &nbsp;]</div>'."\n");
+else if ($section == "a400")
+    print('<div id="pothers">       [&nbsp;    <a href="/a110/'.$subsection.'/'.$package.'">100 Series</a>  &nbsp;] [&nbsp;    <a  href="/c200/'.$subsection.'/'.$package.'">200/300 Series</a>  &nbsp;] [&nbsp;    <strong>400 Series</strong>  &nbsp;]</div>'."\n");
+
+
+if (isset($opkg_data[$package][$section]['Package'])) {
+print('<div id="psource">
+  [&nbsp;Source:    <a href="/source/'.$section.'/'.$subsection.'/'.$package.'" title="Source package building this package">'.$opkg_data[$package][$section]['sourcepackage'].'</a>  &nbsp;]
+</div>
+
+<!-- messages.tmpl -->
+
+<h1>Package: '.$package.' ('.$opkg_data[$package][$section]['Version'].')
+</h1>
+<div id="pmoreinfo">
+<h2>Links for '.$package.'</h2>
+  <h3>Download Source Package '.$package.':</h3>
+    <ul>
+    <li><a href="'.$opkg_data[$package][$section]['Source'].'">['.basename($opkg_data[$package][$section]['Source']).']</a></li>
+    </ul>');
+$maintainer = explode(" ", $opkg_data[$package][$section]['Maintainer']);
+$email = str_replace(">", "", str_replace("<","", $maintainer[1]));
+print('<h3>Maintainer:</h3><ul>	<li><a href="mailto:'.$email.'">'.$maintainer[0].'</a>
+	</li></ul>');
+if (isset($opkg_data[$package][$section]['HomePage'])) {
+$home = explode("/", $opkg_data[$package][$section]['HomePage']);
+print('<h3>External Resources:</h3>
+<ul>
+<li><a href="'.$opkg_data[$package][$section]['HomePage'].'">Homepage</a> ['.$home[2].']</li>
+</ul>');
+}
+print('</div> <!-- end pmoreinfo -->
+
+<div id="ptablist">
+</div>
+
+
+<div id="pdesctab">
+
+<div id="pdesc" >
+	
+	<h2>'.$opkg_data[$package][$section]['Description'].'</h2>
+	<p>'.str_replace("..",".<br/><br/>",$opkg_data[$package][$section]['LongDescription']).'</div> <!-- end pdesc -->
+
+</div> <!-- pdesctab -->
+
+      <div id="pdeps">
+    <h2>Other Packages Related to '.$package.'</h2>
+
+    <table id="pdeplegend" class="visual" summary="legend"><tr>
+    
+    <td><ul class="uldep"><li>depends</li></ul></td>
+    <td><ul class="ulrec"><li>recommends</li></ul></td>
+    <td><ul class="ulsug"><li>suggests</li></ul></td>
+    <td><ul class="ulenh"><li>enhances</li></ul></td>
+    
+    </tr></table>');
+
+print('<ul class="uldep">');
+if(isset($opkg_data[$package][$section]['Depends'])) {
+    $depends = explode(", ", $opkg_data[$package][$section]['Depends']);
+    for($i=0;$i<count($depends);$i++){
+        $orpkg = explode(" | ", $depends[$i]);
+        for($k=0;$k<count($orpkg);$k++){
+            $count = preg_match("|(.*?) \((.*)\)|", $orpkg[$k], $output);
+            if ($count > 0) {
+                $version = '('.trim($output[2]).')';
+                $depend = trim($output[1]);
+            }
+            else {
+                $version = '';
+                $depend = trim($orpkg[$k]);
+            }
+            if ($k == 0)
+                print('<li> <dl> <dt><span class="nonvisual">dep:</span> <a href="/'.$section.'/'.$opkg_data[$depend][$section]['Section'].'/'.$depend.'">'.$depend.'</a> '.$version);
+            else
+                print('<dt>or <a href="/'.$section.'/'.$opkg_data[$depend][$section]['Section'].'/'.$depend.'">'.$depend.'</a> '.$version);
+            print('</dt>        <dd lang="en">'.$opkg_data[$depend][$section]['Description'].'</dd> </dl>');
+        }
+    }
+}
+print('</ul>');
+print('<ul class="ulrec">');
+if(isset($opkg_data[$package][$section]['Recommends'])) {
+    $recommends = explode(", ", $opkg_data[$package][$section]['Recommends']);
+    for($i=0;$i<count($recommends);$i++){
+        $count = preg_match("|(.*?) \((.*)\)|", $recommends[$i], $output);
+        if ($count > 0) {
+            $version = '('.trim($output[2]).')';
+            $recommend = trim($output[1]);
+        }
+        else {
+            $version = '';
+            $recommend = trim($recommends[$i]);
+        }
+        print('<li> <dl> <dt><span class="nonvisual">rec:</span> <a href="/'.$section.'/'.$opkg_data[$recommend][$section]['Section'].'/'.$recommend.'">'.$recommend.'</a> '.$version);
+        print('</dt>        <dd lang="en">'.$opkg_data[$recommend][$section]['Description'].'</dd> </dl>');
+    }
+}
+print('</ul>');
+print('<ul class="ulsug">');
+if(isset($opkg_data[$package][$section]['Suggests'])) {
+    $suggests = explode(", ", $opkg_data[$package][$section]['Suggests']);
+    for($i=0;$i<count($suggests);$i++){
+        $count = preg_match("|(.*?) \((.*)\)|", $suggests[$i], $output);
+        if ($count > 0) {
+            $version = '('.trim($output[2]).')';
+            $suggest = trim($output[1]);
+        }
+        else {
+            $version = '';
+            $suggest = trim($suggests[$i]);
+        }
+        print('<li> <dl> <dt><span class="nonvisual">sug:</span> <a href="/'.$section.'/'.$opkg_data[$suggest][$section]['Section'].'/'.$suggest.'">'.$suggest.'</a> '.$version);
+        print('</dt>        <dd lang="en">'.$opkg_data[$suggest][$section]['Description'].'</dd> </dl>');
+    }
+}
+print('</ul>
+      </div> <!-- end pdeps -->
+
+      <div id="pdownload">
+    <h2>Download '.$package.'</h2>
+    
+    <table summary="The download table links to the download of the package and a file overview. In addition it gives information about the package size and the installed size.">
+    <caption class="hidecss">Download for all available architectures</caption>
+    <tr><th>Architecture</th>
+	<th>Package Size</th>
+	<th>Installed Size</th>
+	<th>Files</th>
+    </tr>
+<tr> 
+<th><a href="');
+if ($subsection == "devel")
+    print("https://sourceforge.net/projects/".$section."opkgdev/files/".$opkg_data[$package][$section]['Filename']);
+else {
+    if ($section == "c200" || $section == "a110")
+        print("https://sourceforge.net/projects/".$section."ipkg/files/".$opkg_data[$package][$section]['Filename']);
+    else
+        print("https://sourceforge.net/projects/".$section."opkg/files/".$opkg_data[$package][$section]['Filename']);
+}
+print('">'.$opkg_data[$package][$section]['Architecture'].'</a></th>
+<td class="size">'.number_format(round($opkg_data[$package][$section]['Size']/1024,2)).'&nbsp;kB</td><td class="size">');
+if (isset($opkg_data[$package][$section]['Installed-Size']))
+    print(number_format(round($opkg_data[$package][$section]['Installed-Size']/1024,2)).'&nbsp;kB</td>');
+else
+    print('0&nbsp;kB</td>');
+print('<td>
+  [<a href="'.$package.'/filelist">list of files</a>]
+</td>
+</tr>
+</table>
+
+    </div> <!-- end pdownload -->');
+}
+}
+}
+if (isset($source) && $source == 'yes') {
+
+if($section == "a110") 
+    print('<div id="pothers">       [&nbsp;    <strong>100 Series</strong>  &nbsp;] [&nbsp;    <a  href="/source/c200/'.$subsection.'/'.$package.'">200/300 Series</a>  &nbsp;] [&nbsp;    <a  href="/source/a400/'.$subsection.'/'.$package.'">400 Series</a>  &nbsp;]</div>'."\n");
+else if ($section == "c200")
+    print('<div id="pothers">       [&nbsp;    <a href="/source/a110/'.$subsection.'/'.$package.'">100 Series</a>  &nbsp;] [&nbsp;    <strong>200/300 Series</strong>  &nbsp;] [&nbsp;    <a  href="/source/a400/'.$subsection.'/'.$package.'">400 Series</a>  &nbsp;]</div>'."\n");
+else if ($section == "a400")
+    print('<div id="pothers">       [&nbsp;    <a href="/source/a110/'.$subsection.'/'.$package.'">100 Series</a>  &nbsp;] [&nbsp;    <a  href="/source/c200/'.$subsection.'/'.$package.'">200/300 Series</a>  &nbsp;] [&nbsp;    <strong>400 Series</strong>  &nbsp;]</div>'."\n");
+
+if (isset($opkg_data[$package][$section]['Package'])) {
+print('<!-- messages.tmpl -->
+
+<h1>Source Package: '.$opkg_data[$package][$section]['sourcepackage'].' ('.$opkg_data[$package][$section]['Version'].')
+</h1>
+<div id="pmoreinfo">
+<h2>Links for '.$package.'</h2>
+  <h3>Download Source Package '.$package.':</h3>
+    <ul>
+    <li><a href="'.$opkg_data[$package][$section]['Source'].'">['.basename($opkg_data[$package][$section]['Source']).']</a></li>
+    </ul>');
+$maintainer = explode(" ", $opkg_data[$package][$section]['Maintainer']);
+$email = str_replace(">", "", str_replace("<","", $maintainer[1]));
+print('<h3>Maintainer:</h3><ul>	<li><a href="mailto:'.$email.'">'.$maintainer[0].'</a>
+	</li></ul>');
+if (isset($opkg_data[$package][$section]['HomePage'])) {
+$home = explode("/", $opkg_data[$package][$section]['HomePage']);
+print('<h3>External Resources:</h3>
+<ul>
+<li><a href="'.$opkg_data[$package][$section]['HomePage'].'">Homepage</a> ['.$home[2].']</li>
+</ul>');
+}
+print('</div> <!-- end pmoreinfo -->
+
+<div id="ptablist">
+</div>');
+
+}
+print('<div id="pbinaries">The following binary packages are built from this source package:<dl>');
+foreach($opkg_data as $arch=>$pch){
+foreach($pch as $key=>$value){
+    if ($value['sourcepackage'] == $opkg_data[$package][$section]['sourcepackage'] && $value['sourcepackage'] != '') {
+        print("<dt><a href='/".$section.'/'.$subsection.'/'.$value['Package']."' id='".$value['Package']."'>".$value['Package']."</a> (".$value['Version'].")</dt><dd>".$value['Description']."</dd>\n");
+    }
+}
+}
+print('</dl></div>');
+}
+if (isset($task) && $task == 'allpackages') {
+foreach($opkg_data as $arch=>$pch){
+foreach($pch as $key=>$value){
+    print("<dt><a href='".$value['Package']."' id='".$value['Package']."'>".$value['Package']."</a> (".$value['Version'].")</dt><dd>".$value['Description']."</dd>\n");
+}
+}
+}
+else if (isset($task) && $task == 'filelist') {
+print('<div id="content"> <h1>Filelist of package <em>'.$package.'</em> in <em>'.$text.' Series</em> of architecture <em>'.$opkg_data[$package][$section]['Architecture'].'</em></h1><!-- messages.tmpl -->
+<div id="pfilelist"><pre>');
+    $command = "cat ".$section."/Packages.filelist ".$section."-dev/Packages.filelist|grep '".$package."'";
+    $pkglist1 = explode("\n",trim(shell_exec($command)));
+    for($i=0;$i<count($pkglist1);$i++){
+        $file = explode(" ", $pkglist1[$i]);
+        $file = explode(",", $file[1]);
+        for($j=0;$j<count($file);$j++){
+            $ss = ":".$opkg_data[$package][$section]['Architecture'].":";
+            $ff = explode($ss, $file[$j]);
+            if ($ff[0] == $package)
+            $outarray[] = "/share/Apps/local".substr($ff[1], 1);
+        }
+    }
+    sort($outarray);
+    foreach($outarray as $out) print($out."\n");
+print('</pre></div></div>');
+}
+if (isset($searchon) && $keywords != '') {
+    if ($searchon == "names" || $searchon == "all") {
+        foreach($opkg_data as $arch=>$pch){
+            foreach($pch as $key=>$value){
+                if ($searchon == "names")
+                    $pos = stripos($value['Package'], $keywords);
+                else {
+                    $pos = stripos($value['Package'], $keywords);
+                    if ($pos === false) {
+                        $pos = stripos($value['Description'], $keywords);
+                        if ($pos === false) {
+                            $pos = stripos($value['LongDescription'], $keywords);
+                        }
+                    }
+                }
+                if ($pos !== false)
+                    $res_array[$value['Package']][$key] = $value;
+            }
+        }
+        if ($searchon == "names")
+            $txt = "packages that names contain <em>".$keywords."</em> ";
+        else
+            $txt = "<em>".$keywords."</em> in packages names and descriptions ";
+    }
+    else if ($searchon == "sourcenames"){
+        foreach($opkg_data as $arch=>$pch){
+            foreach($pch as $key=>$value){
+                $pos = stripos($value['sourcepackage'], $keywords);
+                if ($pos !== false)
+                    $res_array[$value['sourcepackage']][$key][] = $value;
+            }
+        }
+        $txt = "source packages that names contain <em>".$keywords."</em> ";
+    }
+    else if ($searchon == "contents") {
+        $txt = "paths that end with <em>".$keywords."</em>";
+
+    }
+print('<div id="psearchres"> 
+<p>You have searched for '.$txt.' in all sections and all architectures.  Found <strong>'.count($res_array).'</strong> matching packages.</p>');
+
+if ($searchon == "names" || $searchon == "all"){
+    foreach($res_array as $key => $value){
+        print('<h3>Package '.$key.'</h3> <ul> ');
+        foreach ($value as $arch => $pch) {
+            print('<li class="squeeze"><a class="resultlink" href="/'.$arch.'/'.$pch['Section'].'/'.$pch['Package'].'">'.$arch.'</a> ('.$pch['Section'].'): '.$pch['Description'].'	<br>'.$pch['Version'].': '.$pch['Architecture'].'</li>');
+        }
+    print('</ul>');
+    }
+}
+else if ($searchon == "sourcenames"){
+    foreach($res_array as $key => $value){
+        print('<h3>Source Package '.$key.'</h3><ul>');
+        foreach($value as $arch => $pch){
+            print('<li><a class="resultlink" href="/source/'.$arch.'/apng2gif">'.$arch.'</a> ('.$pch[0]['Section'].'): '.$pch[0]['Version'].'<br>Binary packages: <span id="js_apng2gifwheezyus" class="p_js_elem"></span> <span id="html_apng2gifwheezyus" class="binaries">');
+            for($x=0;$x<count($pch)-1;$x++)
+              print('<a href="/'.$section.'/'.$pch[$x]['Section'].'/'.$pch[$x]['Package'].'">'.$pch[$x]['Package'].'</a>, ');
+            print('<a href="/'.$section.'/'.$pch[$x]['Section'].'/'.$pch[count($pch)-1]['Package'].'">'.$pch[count($pch)-1]['Package'].'</a>');
+        print('</span></li>');
+        }
+        print('</span></li></ul>');
+    }
+    print('</div>');
+}
+}
+?>
+
+<div id="footer">
+
+
+<hr class="hidecss">
+<hr class="hidecss">
+<div id="fineprint" class="bordertop">
+<p>
+Content Copyright &copy; 2013 - 2014;</p>
+
+</div> <!-- end fineprint -->
+</div> <!-- end footer -->
+</body>
+</html>

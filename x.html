@@ -1,0 +1,191 @@
+<form method="GET" action="/search">
+<div id="hpacketsearch">
+<input type="submit" value="Search">
+<select size="1" name="searchon">
+<option value="names" selected="selected">
+package names</option>
+<option value="all" >descriptions</option>
+<option value="sourcenames" >source package names</option>
+<option value="contents" >package contents</option>
+</select>
+<input type="text" size="30" name="keywords" value="" id="kw">
+</div> <!-- end hpacketsearch -->
+</form>
+
+<!-- show.tmpl -->
+
+
+   <div id="pothers">       [&nbsp;   <strong>wheezy</strong>  &nbsp;]
+          [&nbsp;    <a  href="/jessie/abootimg">jessie</a>  &nbsp;]
+          [&nbsp;    <a  href="/sid/abootimg">sid</a>  &nbsp;]</div>
+
+
+<div id="psource">
+  [&nbsp;Source:    <a title="Source package building this package" href="/source/wheezy/abootimg">abootimg</a>  &nbsp;]
+</div>
+
+<!-- messages.tmpl -->
+
+<h1>Package: abootimg (0.6-1)
+</h1>
+
+
+<div id="pmoreinfo">
+<h2>Links for abootimg</h2>
+  <h3>Download Source Package <a href="/source/wheezy/abootimg">abootimg</a>:</h3>
+    <ul>
+    <li><a href="http://ftp.de.debian.org/debian/pool/main/a/abootimg/abootimg_0.6.orig.tar.gz">[abootimg_0.6.orig.tar.gz]</a></li>
+    </ul>
+
+  <h3>Maintainer:</h3><ul>	<li><a href="mailto:mmind@debian.org">Heiko Stuebner</a>
+	(<a href="http://qa.debian.org/developer.php?login=mmind%40debian.org" title="An overview over the maintainer's packages and uploads">QA&nbsp;Page</a>)
+	</li></ul>
+
+<h3>External Resources:</h3>
+<ul>
+<li><a href="http://gitorious.org/ac100/abootimg">Homepage</a> [gitorious.org]</li>
+</ul>
+
+</div> <!-- end pmoreinfo -->
+
+<div id="ptablist">
+</div>
+
+
+<div id="pdesctab">
+
+<div id="pdesc" >
+	
+	<h2>Tool to read/write/update android boot images</h2>
+	<p>
+Android devices use a special partition format to boot any
+operating system on the devices. These boot-images contain
+a kernel image, a ramdisk, optionally a 2nd stage boot loader
+and the commandline passed to the kernel when booting.
+The original mkbootimg from Android can only create these images
+where abootimg can also extract and modify them.
+Handling android boot images is necessary when bringing other
+operating systems to android devices.
+	
+
+</div> <!-- end pdesc -->
+
+</div> <!-- pdesctab -->
+
+      <div id="pdeps">
+    <h2>Other Packages Related to abootimg</h2>
+
+    <table id="pdeplegend" class="visual" summary="legend"><tr>
+    
+    <td><ul class="uldep"><li>depends</li></ul></td>
+    <td><ul class="ulrec"><li>recommends</li></ul></td>
+    <td><ul class="ulsug"><li>suggests</li></ul></td>
+    <td><ul class="ulenh"><li>enhances</li></ul></td>
+    
+    </tr></table>
+
+  <ul class="uldep">
+  
+    <li>
+    
+      <dl>
+      <dt><span class="nonvisual">dep:</span>
+	<a href="/wheezy/libblkid1">libblkid1</a>
+	 (>= 2.16)
+        </dt>        <dd lang="en">block device id library
+        </dd>
+      
+      </dl>
+    
+  
+    <li>
+    
+      <dl>
+      <dt><span class="nonvisual">dep:</span>
+	<a href="/wheezy/libc0.1">libc0.1</a>
+	 (>= 2.3)
+         [kfreebsd-amd64, kfreebsd-i386]</dt>        <dd lang="en">Embedded GNU C Library: Shared libraries	  <br>also a virtual package provided by
+	  
+	    <span id="js_libc0.1" class="p_js_elem"></span> <span id="html_libc0.1"><a href="/wheezy/libc0.1-udeb">libc0.1-udeb</a></span>
+	
+        
+        </dd>
+      
+      </dl>
+    
+  
+    <li>
+    
+      <dl>
+      <dt><span class="nonvisual">dep:</span>
+	<a href="/wheezy/libc6">libc6</a>
+	 (>= 2.13)
+         [s390x]</dt>        <dd lang="en">Embedded GNU C Library: Shared libraries	  <br>also a virtual package provided by
+	  
+	    <span id="js_libc6" class="p_js_elem"></span> <span id="html_libc6"><a href="/wheezy/libc6-udeb">libc6-udeb</a></span>
+        </dd>
+      </dl>
+      <dl>
+      <dt><span class="nonvisual">dep:</span>
+	<a href="/wheezy/libc6">libc6</a>
+	 (>= 2.2)
+         [i386, mips, mipsel]</dt>
+      </dl>
+    
+      <dl>
+      <dt><span class="nonvisual">dep:</span>
+	<a href="/wheezy/libc6">libc6</a>
+	 (>= 2.2.5)
+         [amd64]</dt>
+      </dl>
+    
+      <dl>
+      <dt><span class="nonvisual">dep:</span>
+	<a href="/wheezy/libc6">libc6</a>
+	 (>= 2.4)
+         [armel, armhf, powerpc, s390]</dt>
+      </dl>
+    
+      <dl>
+      <dt><span class="nonvisual">dep:</span>
+	<a href="/wheezy/libc6">libc6</a>
+	 (>= 2.6)
+         [sparc]</dt>
+      </dl>
+    <li>
+    
+      <dl>
+      <dt><span class="nonvisual">dep:</span>
+	<a href="/wheezy/libc6.1">libc6.1</a>
+	 (>= 2.2)
+         [ia64]</dt>        <dd lang="en">Embedded GNU C Library: Shared libraries	  <br>also a virtual package provided by
+	  
+	    <span id="js_libc6.1" class="p_js_elem"></span> <span id="html_libc6.1"><a href="/wheezy/libc6.1-udeb">libc6.1-udeb</a></span>
+	
+        
+        </dd>
+      
+      </dl>
+  </ul>
+      </div> <!-- end pdeps -->
+
+      <div id="pdownload">
+    <h2>Download abootimg</h2>
+    
+    <table summary="The download table links to the download of the package and a file overview. In addition it gives information about the package size and the installed size.">
+    <caption class="hidecss">Download for all available architectures</caption>
+    <tr><th>Architecture</th>
+	<th>Package Size</th>
+	<th>Installed Size</th>
+	<th>Files</th>
+    </tr>
+<tr> 
+<th><a href="/wheezy/mips/abootimg/download">mips</a></th>
+<td class="size">14.2&nbsp;kB</td><td class="size">84.0&nbsp;kB</td>
+<td>
+  [<a href="/wheezy/mips/abootimg/filelist">list of files</a>]
+</td>
+</tr>
+</table>
+
+    </div> <!-- end pdownload -->
